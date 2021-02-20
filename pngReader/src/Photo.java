@@ -1,4 +1,17 @@
- public Photo[][] toChunks (int width,int height){
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class Photo {
+    private double[][][] imgData;
+    public Photo(double[][][] imgData){
+        this.imgData = imgData;
+    }
+
+    public double[][][] getImgData() {
+        return imgData;
+    }
+
+    public Photo[][] toChunks (int width,int height){
         int chunkHeight = imgData.length/height;
         int chunkWidth = imgData[0].length/width;
         if (chunkHeight==0){
@@ -19,3 +32,17 @@
         }
         return photoGrid;
     }
+
+    public void prettyPrint(){
+        for (int i=0;i<imgData.length;i++){
+            for (int b=0;b<imgData[0].length;b++){
+                System.out.println(Arrays.toString(imgData[i][b]));
+            }
+        }
+    }
+
+    public void printInfo(){
+        System.out.println(imgData.length);
+        System.out.println(imgData[0].length);
+    }
+}
