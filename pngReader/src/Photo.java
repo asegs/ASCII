@@ -32,11 +32,8 @@ public class Photo {
         }
         return photoGrid;
     }
-    
-     public int getProportionalHeight(int length) {
-        return length * this.imgData.length / this.imgData[0].length; 
-    }
-    
+
+
     public int getProportionalLength(int height) {
         return this.imgData[0].length * height / this.imgData.length;
     }
