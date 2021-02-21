@@ -17,7 +17,7 @@ public class Controller {
     }
     @GetMapping("/render/{filename}/{width}")
     public void render(@PathVariable String filename,@PathVariable int width) throws IOException {
-        String readFrom = "E:\\Go\\asciiServer\\images\\"+filename+".png";
+        String readFrom = "E:\\Go\\asciiServer\\images\\"+filename;
         String saveTo = "E:\\Go\\asciiServer\\textfiles\\"+filename+".txt";
         handler.handle(width,readFrom,saveTo);
     }
