@@ -28,10 +28,6 @@ public class Reader {
        try {
             BufferedImage bufferedImage = ImageIO.read(new File(inputFile));
             ImageIO.write(bufferedImage, "png", new File(outputFile));
-            ByteArrayOutputStream byteArrayOut = new ByteArrayOutputStream();
-            ImageIO.write(bufferedImage, "png", byteArrayOut);
-            byte[] resultingBytes = byteArrayOut.toByteArray();
-
         } catch (IOException e) {
             System.out.println(e);
         }
