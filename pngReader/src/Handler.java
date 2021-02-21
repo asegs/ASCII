@@ -7,7 +7,7 @@ public class Handler {
         Reader reader = new Reader();
         ToAscii toAscii = new ToAscii();
         Writer writer = new Writer();
-        Photo photo = reader.loadPhoto("C:\\Users\\aarse\\Documents\\pngReader\\src\\eiffel.png",5);
+        Photo photo = reader.loadPhoto(filename,5);
         long startTime = System.nanoTime();
         Photo[][] grid = photo.toChunks(width, photo.getProportionalLength(width));
         StringBuilder result = new StringBuilder();
