@@ -8,14 +8,14 @@ class Form extends Component{
         super(props);
         this.state = {
             addressMode:false,
-            latitude:0.0,
-            longitude:0.0,
-            maxShift:0,
+            latitude:43.0844955,
+            longitude:-77.6749311,
+            maxShift:calculate(43.0844955,15),
             zoom:15,
             address:"",
             inverse:false,
             photo:undefined,
-            shift:0,
+            shift:(0.33*calculate(43.0844955,15)).toFixed(3),
             text:[],
             photoNames:[]
         }
@@ -64,7 +64,7 @@ class Form extends Component{
         if (this.state.zoom<=1){
             return;
         }
-        this.setState({zoom:this.state.zoom-1},()=>{
+        this.setState({zoom:parseInt(this.state.zoom)-1},()=>{
             this.submitCoords();
         })
     }
@@ -73,7 +73,7 @@ class Form extends Component{
         if (this.state.zoom>=22){
             return;
         }
-        this.setState({zoom:this.state.zoom+1},()=>{
+        this.setState({zoom:parseInt(this.state.zoom)+1},()=>{
             this.submitCoords();
         })
     }
@@ -98,10 +98,14 @@ class Form extends Component{
         const body = await response.json();
         console.log(body);
         if (body['body']){
-            this.setState({text:body['body'].split("\n"),maxShift:calculate(this.state.latitude,this.state.zoom),photoNames:body['photos']});
+            this.setState({text:body['body'].split("\n"),maxShift:calculate(this.state.latitude,this.state.zoom),photoNames:body['photos']},()=>{
+                this.setState({shift:(0.33*this.state.maxShift).toFixed(3)});
+            });
         }
         else {
-            this.setState({text: body.split("\n"), maxShift: calculate(this.state.latitude, this.state.zoom)});
+            this.setState({text: body.split("\n"), maxShift: calculate(this.state.latitude, this.state.zoom)},()=>{
+                this.setState({shift:(0.33*this.state.maxShift).toFixed(3)});
+            });
         }
     }
 
@@ -123,12 +127,16 @@ class Form extends Component{
         console.log(body)
         if (body['body']){
             this.setState({text:body['body'].split("\n"),latitude:body['latitude'],longitude:body['longitude'],addressMode:false,photoNames:body['photos']},()=>{
-                this.setState({maxShift:calculate(this.state.latitude,this.state.zoom)});
+                this.setState({maxShift:calculate(this.state.latitude,this.state.zoom)},()=>{
+                    this.setState({shift:(0.33*this.state.maxShift).toFixed(3)});
+                });
                 document.getElementById("mode").checked = false;
             });
         }
         else {
-            this.setState({text: body.split("\n"), maxShift: calculate(this.state.latitude, this.state.zoom)});
+            this.setState({text: body.split("\n"), maxShift: calculate(this.state.latitude, this.state.zoom)},()=>{
+                this.setState({shift:(0.33*this.state.maxShift).toFixed(3)});
+            });
         }
     }
 
@@ -161,7 +169,9 @@ class Form extends Component{
         formData.append("latitude",this.state.latitude);
         formData.append("longitude",this.state.longitude);
         formData.append("file",this.state.photo);
-        console.log(formData.get("latitude"))
+        formData.append("extension",this.state.photo.name.substring(this.state.photo.name.indexOf(".")));
+        console.log(formData.get("extension"));
+        console.log(formData.get("file"))
         await fetch('/uploadphoto',{
             method:'POST',
             headers: {
@@ -169,6 +179,7 @@ class Form extends Component{
             },
             body: formData,
         })
+        this.submitCoords();
     }
 
     handler = () =>{
@@ -196,6 +207,12 @@ class Form extends Component{
         for (let step=0;step<this.state.photoNames.length;step++){
             photos.push(<PhotoElement name={this.state.photoNames[step]['name']} longitude={this.state.photoNames[step]['longitude']} latitude={this.state.photoNames[step]['latitude']} jumpTo={this.jumpTo}/>);
         }
+
+        let submit = "";
+        if (this.state.photo!==undefined){
+            submit = <button onClick={this.uploadPhoto} >Upload photo!</button>
+
+        }
         return(
           <div>
               Address mode: <input id={"mode"} type={"checkbox"} onChange={this.toggleMode}/><br/>
@@ -205,7 +222,7 @@ class Form extends Component{
               Address: <input onChange={this.changeAddress} type={this.state.addressMode ? "text" : "hidden"}/><br/>
               Zoom: <input onChange={this.changeZoom} value={this.state.zoom} type={"number"}/><br/>
 
-              <button onClick={this.handler}>Submit!</button><br/>
+              <button style={{backgroundColor: '#85bcea',padding: '10px 32px',cursor: 'pointer',borderRadius:"10px"}} onClick={this.handler}>Render</button><br/>
               <div style={{width:'20%',margin:'auto'}}>
         <Slider
             defaultValue={20}
@@ -215,7 +232,7 @@ class Form extends Component{
             min={0}
             max={this.state.maxShift}
         />
-        <p>Shift: {this.state.shift}</p>
+        <p>Shift: &#177;{this.state.shift}&#176;</p>
               </div>
               <button onClick={this.shiftLeft} style={{float:'left',marginLeft:'15%'}}>{"<="}</button>
               <button onClick={this.zoomOut} style={{float:'center-left',marginLeft:'30%'}}>{"(-)"}</button>
@@ -225,7 +242,7 @@ class Form extends Component{
               {textGrid}<br/>
               <button onClick={this.shiftDown} style={{float:'center'}}>{"v"}</button><br/>
               Photo: <input type={"file"} onChange={this.updateFile}/>
-              <button onClick={this.uploadPhoto}>Upload photo!</button>
+              {submit}
               {photos}
           </div>
         );
