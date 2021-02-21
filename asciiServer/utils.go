@@ -121,7 +121,7 @@ func ReadToString(filename string) string {
 
 
 func getAddressCoords(address string)Coords{
-	url := "https://maps.googleapis.com/maps/api/geocode/json?address="+strings.ReplaceAll(address," ","+")+"&key=AIzaSyDlpGn52XAyQUyy9va5NWITy2DKZcO7CJ4"
+	url := "https://maps.googleapis.com/maps/api/geocode/json?address="+strings.ReplaceAll(address," ","+")+"&key=KEY"
 	response, e := http.Get(url)
 	if e != nil {
 		log.Fatal(e)
