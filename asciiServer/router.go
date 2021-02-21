@@ -84,6 +84,7 @@ func savePhotoHandler(w http.ResponseWriter,r *http.Request){
 	file, _, _ := r.FormFile("file")
 	latitude := r.FormValue("latitude")
 	longitude := r.FormValue("longitude")
+	extension := r.FormValue("extension")
 	name := randomBase64String(96)
 	f, _ := os.OpenFile("E:\\Go\\asciiServer\\images\\"+name+".png", os.O_WRONLY|os.O_CREATE, 0666)
 	defer f.Close()
@@ -96,8 +97,10 @@ func savePhotoHandler(w http.ResponseWriter,r *http.Request){
 	photo.Name = name
 
 	success := uploadPhoto(photo)
-	_, _ = http.Get("http://localhost:9001/ascii/render/" + photo.Name + "/620")
+	_, _ = http.Get("http://localhost:9001/ascii/render/" + photo.Name+extension + "/620")
 	_ = json.NewEncoder(w).Encode(success)
+	deleteFile("E:\\Go\\asciiServer\\images\\"+name+".png")
+	deleteFile("E:\\Go\\asciiServer\\images\\"+name+".jpg")
 	defer file.Close()
 }
 
