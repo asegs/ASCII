@@ -7,6 +7,10 @@ import java.util.Arrays;
 
 public class Reader {
     public Photo loadPhoto(String filename,double contrastBoost) throws IOException {
+        String prefix = filename.substring(filename.length() - 4, filename.length()); 
+        if(prefix.equals(".png")){
+            filename = jpegToPng(filename, filename.substring(0, filename.length() - 4).concat(".png"));
+        }
 
         Utils utils = new Utils();
         BufferedImage image = ImageIO.read(new File(filename));
