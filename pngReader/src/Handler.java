@@ -1,14 +1,15 @@
-import java.io.IOException;
-import java.util.Random;
+package com.example.ascii.Logic;
 
-public class Main {
-    public static void main(String[] args) throws IOException {
+import java.io.IOException;
+
+public class Handler {
+    public void handle(int width,String filename) throws IOException {
         Reader reader = new Reader();
         ToAscii toAscii = new ToAscii();
         Writer writer = new Writer();
         Photo photo = reader.loadPhoto("C:\\Users\\aarse\\Documents\\pngReader\\src\\eiffel.png",5);
         long startTime = System.nanoTime();
-        Photo[][] grid = photo.toChunks(300, photo.getProportionalLength(300));
+        Photo[][] grid = photo.toChunks(width, photo.getProportionalLength(width));
         StringBuilder result = new StringBuilder();
         for (int row=0;row<grid.length;row++){
             for (int col=0;col<grid[0].length;col++){
@@ -18,6 +19,6 @@ public class Main {
         }
         long endTime = System.nanoTime();
         System.out.println(((endTime-startTime)/1000000)+"ms total run time.");
-        writer.write("render.txt", result.toString());
+        writer.write(filename, result.toString());
     }
 }
