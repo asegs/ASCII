@@ -26,7 +26,13 @@ public class Handler {
         Reader reader = new Reader();
         ToAscii toAscii = new ToAscii();
         Writer writer = new Writer();
-        Photo photo = reader.loadPhoto(readFrom,1,false);
+        Utils utils = new Utils();
+        String extension = readFrom.substring(readFrom.length()-4);
+        if (!extension.equals(".png")){
+            utils.toPNG(readFrom,readFrom.substring(0,readFrom.length()-4)+".png");
+            readFrom = readFrom.substring(0,readFrom.length()-4)+".png";
+        }
+        Photo photo = reader.loadPhoto(readFrom,3,false);
         long startTime = System.nanoTime();
         Photo[][] grid = photo.toChunks(width, (int) (photo.getProportionalLength(width)*0.5));
         StringBuilder result = new StringBuilder();
