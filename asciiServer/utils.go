@@ -31,7 +31,7 @@ func deleteFile(filename string){
 }
 
 func saveImageOfLocation(location Location) string{
-	url := "https://maps.googleapis.com/maps/api/staticmap?center="+fmt.Sprintf("%f", location.Latitude)+","+fmt.Sprintf("%f", location.Longitude)+"&zoom="+fmt.Sprintf("%d", location.Zoom)+"&size=620x620&maptype=satellite&&key=AIzaSyDlpGn52XAyQUyy9va5NWITy2DKZcO7CJ4"
+	url := "https://maps.googleapis.com/maps/api/staticmap?center="+fmt.Sprintf("%f", location.Latitude)+","+fmt.Sprintf("%f", location.Longitude)+"&zoom="+fmt.Sprintf("%d", location.Zoom)+"&size=620x620&maptype=satellite&&key=KEY"
 	response, e := http.Get(url)
 	if e != nil {
 		log.Fatal(e)
@@ -53,7 +53,7 @@ func saveImageOfLocation(location Location) string{
 }
 
 func saveImageOfAddress(location AddressLocation) string{
-	url := "https://maps.googleapis.com/maps/api/staticmap?center=\""+strings.ReplaceAll(location.Address," ","+")+"\"&zoom="+fmt.Sprintf("%d", location.Zoom)+"&size=620x620&maptype=satellite&&key=AIzaSyDlpGn52XAyQUyy9va5NWITy2DKZcO7CJ4"
+	url := "https://maps.googleapis.com/maps/api/staticmap?center=\""+strings.ReplaceAll(location.Address," ","+")+"\"&zoom="+fmt.Sprintf("%d", location.Zoom)+"&size=620x620&maptype=satellite&&key=KEY"
 	response, e := http.Get(url)
 	if e != nil {
 		log.Fatal(e)
