@@ -21,17 +21,13 @@ func locationUpdateHandler(w http.ResponseWriter,r *http.Request){
 	}
 	_ = changeLocation(location)
 	photoName := saveImageOfLocation(location)
-	_, err = http.Get("http://localhost:9001/ascii/render/" + photoName + "/620/"+fmt.Sprintf("%t",location.Inverse))
 	_ = json.NewEncoder(w).Encode(Response{
-		Body:      ReadToString("E:\\Go\\asciiServer\\textfiles\\"+photoName+".txt"),
+		Body:      handler(photoName,location.Inverse,".png"),
 		Latitude:  location.Latitude,
 		Longitude: location.Longitude,
 		Photos: getAllPhotosWithinSquare(location.Zoom,location.Latitude,location.Longitude),
 	})
-	deleteFile("E:\\Go\\asciiServer\\textfiles\\"+photoName+".txt")
 	deleteFile("E:\\Go\\asciiServer\\images\\"+photoName+".png")
-	deleteFile("E:\\Go\\asciiServer\\images\\"+photoName+".jpg")
-
 }
 
 func addressUpdateHandler(w http.ResponseWriter,r *http.Request)  {
@@ -42,18 +38,14 @@ func addressUpdateHandler(w http.ResponseWriter,r *http.Request)  {
 		fmt.Println(err.Error())
 	}
 	photoName := saveImageOfAddress(location)
-	_, err = http.Get("http://localhost:9001/ascii/render/" + photoName + "/620/"+fmt.Sprintf("%t",location.Inverse))
 	coords := getAddressCoords(location.Address)
-	fmt.Println(coords)
 	_ = json.NewEncoder(w).Encode(Response{
-		Body:      ReadToString("E:\\Go\\asciiServer\\textfiles\\"+photoName+".txt"),
+		Body:      handler(photoName,location.Inverse,".png"),
 		Latitude:  coords.Latitude,
 		Longitude: coords.Longitude,
 		Photos: getAllPhotosWithinSquare(location.Zoom,coords.Latitude,coords.Longitude),
 	})
-	deleteFile("E:\\Go\\asciiServer\\textfiles\\"+photoName+".txt")
 	deleteFile("E:\\Go\\asciiServer\\images\\"+photoName+".png")
-	deleteFile("E:\\Go\\asciiServer\\images\\"+photoName+".jpg")
 }
 
 func userCreationHandler(w http.ResponseWriter,r *http.Request){
@@ -85,8 +77,16 @@ func savePhotoHandler(w http.ResponseWriter,r *http.Request){
 	latitude := r.FormValue("latitude")
 	longitude := r.FormValue("longitude")
 	extension := r.FormValue("extension")
+	if extension != ".png" && extension != ".jpeg" && extension != ".jpg"{
+		w.WriteHeader(403)
+		return
+	}
 	name := randomBase64String(96)
-	f, _ := os.OpenFile("E:\\Go\\asciiServer\\images\\"+name+".png", os.O_WRONLY|os.O_CREATE, 0666)
+	if extension == ".jpg"{
+		extension = ".jpeg"
+	}
+
+	f, _ := os.Create("E:\\Go\\asciiServer\\images\\"+name+extension)
 	defer f.Close()
 	io.Copy(f, file)
 	var photo Photo
@@ -95,12 +95,12 @@ func savePhotoHandler(w http.ResponseWriter,r *http.Request){
 	photo.Longitude = FLongitude
 	photo.Latitude = FLatitude
 	photo.Name = name
-
 	success := uploadPhoto(photo)
-	_, _ = http.Get("http://localhost:9001/ascii/render/" + photo.Name+extension + "/620")
+	str := handler(name,false,extension)
+	fmt.Println(name)
+	Write("E:\\Go\\asciiServer\\textfiles\\"+name+".txt",str)
 	_ = json.NewEncoder(w).Encode(success)
 	deleteFile("E:\\Go\\asciiServer\\images\\"+name+".png")
-	deleteFile("E:\\Go\\asciiServer\\images\\"+name+".jpg")
 	defer file.Close()
 }
 
