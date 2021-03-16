@@ -67,58 +67,95 @@ func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) [4]int {
 
 type Picture struct {
 	ImageData [][][4] int
+	heightIdx int
+	widthIdx int
 }
 
 
 func handler(filename string, inverse bool,extension string)string{
-	fmt.Println(filename)
 	start := time.Now()
-	p := createPixels("E:\\Go\\asciiServer\\images\\"+filename+extension)
-	pictures := vaporize(p,600,int(getPropLength(p,600)/2))
+	p := createPixels("/home/arctic/Documents/Programming/Git/ASCII/asciiServer/images/"+filename+extension)
+	chunkHeight := int(len(p.ImageData)/(getPropLength(p, 600)/2 +1))
+	chunkWidth := int(len(p.ImageData[0])/600)
+	chars := make([][]rune,roundingHandler(len(p.ImageData),chunkHeight))
+	for x:=0;x<len(chars);x++{
+		chars[x] = make([]rune,roundingHandler(len(p.ImageData[0]),chunkWidth))
+	}
+	chars = vaporize(p,600,int(getPropLength(p,600)/2),chars)
 	var sb strings.Builder
-	for i:=0;i<len(pictures);i++{
-		for b:=0;b<len(pictures[0]);b++{
-			sb.WriteRune(ascii(pictures[i][b],inverse))
+	for i:=0;i<len(chars);i++{
+		for b:=0;b<len(chars[0]);b++{
+			sb.WriteRune(chars[i][b])
 		}
 		sb.WriteRune('\n')
 	}
 	end := time.Now()
 	fmt.Println(end.Sub(start))
+	Write("/home/arctic/Documents/Programming/Git/ASCII/asciiServer/textfiles/knight.txt",sb.String())
 	return sb.String()
 }
 
+func roundingHandler(dim int,chunkDim int)int{
+	var iters int
+	if dim % chunkDim ==0{
+		iters = dim/chunkDim
+	}else{
+		fDim := float64(dim)
+		fChunkDim := float64(chunkDim)
+		iters = (int)(fDim/fChunkDim+1)
+	}
+	return iters
+}
 
-func vaporize(picture Picture,width int,height int)[][]Picture{
+
+func vaporize(picture Picture,width int,height int,chars [][]rune)[][]rune{
+	complete := make(chan bool,1)
 	chunkHeight := int(len(picture.ImageData)/height)
 	chunkWidth := int(len(picture.ImageData[0])/width)
-	if chunkHeight==0 {
-		chunkHeight = 1
-	}
-	if chunkWidth==0 {
-		chunkWidth=1
-	}
-	realHeight := len(picture.ImageData)/chunkHeight+1
-	realWidth := len(picture.ImageData[0])/chunkWidth+1
-	pictureGrid := make([][]Picture,realHeight)
-	for i := 0; i < realHeight; i++ {
-		pictureGrid[i] = make([]Picture, realWidth)
-	}
+	heightIters := roundingHandler(len(picture.ImageData),chunkHeight)
+	widthIters := roundingHandler(len(picture.ImageData[0]),chunkWidth)
+	size := heightIters*widthIters
+	toFill := make(chan bool,size)
+	readyToConvert := make(chan Picture,size)
+	heightIdx := 0
+	widthIdx := 0
 	for row := 0;row<len(picture.ImageData);row+=chunkHeight{
+		widthIdx = 0
 		for col := 0;col<len(picture.ImageData[0]);col+=chunkWidth{
-
-			//initialize new width x height chunk
-			chunk := make([][][4]int,chunkHeight)
-			for i := 0;i<chunkHeight;i++{
-				chunk[i] = make([][4]int,chunkWidth)
-			}
-
-			for i:= row;i<row+chunkHeight&&i<len(picture.ImageData);i++{
-				chunk[i-row] = picture.ImageData[i][col:col+chunkWidth]
-			}
-			pictureGrid[row/chunkHeight][col/chunkWidth] = Picture{ImageData: chunk}
+			go createPhoto(chunkHeight,chunkWidth,row,&picture,col,heightIdx,widthIdx,&readyToConvert)
+			go func() {
+				picture := <-readyToConvert
+				chars[picture.heightIdx][picture.widthIdx] = ascii(picture,false)
+				complete<-true
+			}()
+			widthIdx++
 		}
+		heightIdx++
 	}
-	return pictureGrid
+	go func() {
+		for true{
+			if len(toFill)==cap(toFill){
+				break
+			}
+		}
+		complete <- true
+	}()
+	<-complete
+	return chars
+}
+
+func createPhoto(chunkHeight int,chunkWidth int,row int,picture *Picture,col int,heightIdx int,widthIdx int,needParsing *chan Picture){
+	//initialize new width x height chunk
+	chunk := make([][][4]int,chunkHeight)
+	for i := 0;i<chunkHeight;i++{
+		chunk[i] = make([][4]int,chunkWidth)
+	}
+
+	for i:= row;i<row+chunkHeight&&i<len(picture.ImageData);i++{
+		chunk[i-row] = picture.ImageData[i][col:col+chunkWidth]
+	}
+	*needParsing<-Picture{ImageData: chunk,heightIdx: heightIdx,widthIdx: widthIdx}
+
 }
 
 func intAbs(i int)int{
